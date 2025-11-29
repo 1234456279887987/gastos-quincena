@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Control de gastos quincena</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2563eb" />
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 1rem;
+      background: #f3f4f6;
+    }
+    .app {
+      max-width: 550px;
+      margin: 0 auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+    h1 {
+      font-size: 1.4rem;
+      margin-top: 0;
+      text-align: center;
+    }
+    h2 {
+      font-size: 1rem;
+      margin-top: 1rem;
+      margin-bottom: 0.4rem;
+    }
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      margin-bottom: 0.2rem;
+    }
+    input, select, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.45rem 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 0.8rem;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary {
+      background: #2563eb;
+      color: white;
+    }
+    button.secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+    .row {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .row > div {
+      flex: 1;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 0.3rem;
+      text-align: left;
+    }
+    th {
+      background: #f9fafb;
+    }
+    .totales {
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: pre-line; /* Para saltos de línea */
+    }
+    .seccion {
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      background: #f9fafb;
+      margin-bottom: 0.75rem;
+      border: 1px solid #e5e7eb;
+    }
+    .nota {
+      font-size: 0.8rem;
+      color: #4b5563;
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>Gastos por quincena</h1>
+
+    <!-- CONFIGURACIÓN DE INGRESO BASE -->
+    <div class="seccion">
+      <h2>Ingreso base por quincena</h2>
+      <div class="row">
+        <div>
+          <label for="ingresoQ1">Ingreso Q1 (1–15)</label>
+          <input type="number" id="ingresoQ1" min="0" step="0.01" />
+        </div>
+        <div>
+          <label for="ingresoQ2">Ingreso Q2 (16–fin)</label>
+          <input type="number" id="ingresoQ2" min="0" step="0.01" />
+        </div>
+      </div>
+      <button type="button" id="btn-guardar-ingreso" class="secondary">
+        Guardar ingreso base
+      </button>
+      <div class="nota">
+        El diezmo se calculará como 10% del ingreso total de la quincena
+        (ingreso base + ingresos extra).
+      </div>
+    </div>
+
+    <!-- INGRESOS EXTRA -->
+    <div class="seccion">
+      <h2>Ingresos extra</h2>
+      <div class="row">
+        <div>
+          <label for="ingresoExtraMonto">Monto ingreso extra</label>
+          <input type="number" id="ingresoExtraMonto" min="0" step="0.01" />
+        </div>
+        <div>
+          <label for="ingresoExtraFecha">Fecha</label>
+          <input type="date" id="ingresoExtraFecha" />
+        </div>
+      </div>
+      <label for="ingresoExtraDesc">Descripción (opcional)</label>
+      <textarea id="ingresoExtraDesc" rows="1"></textarea>
+      <button type="button" id="btn-agregar-ingreso-extra" class="secondary">
+        Agregar ingreso extra
+      </button>
+      <div class="nota">
+        Ejemplo: ventas, comisiones, trabajos extra, etc.
+      </div>
+    </div>
+
+     <!-- GASTOS FIJOS POR QUINCENA -->
+    <div class="seccion">
+      <h2>Gastos fijos por quincena</h2>
+
+      <label for="gfFecha">Fecha de la quincena</label>
+      <input type="date" id="gfFecha" />
+
+      <label for="gfDiasTrabajo">Días que fuiste a trabajar en esa quincena</label>
+      <input type="number" id="gfDiasTrabajo" min="0" step="1" />
+
+      <div class="nota">
+        Se agregarán automáticamente:
+        <br>- Q1: Despensa $1,500
+        <br>- Cada quincena: Celular $500
+        <br>- Camiones: $32.20 por día trabajado
+        <br>- Diezmo: 10% del ingreso base de la quincena
+      </div>
+
+      <button type="button" id="btn-aplicar-gastos-fijos" class="secondary">
+        Aplicar gastos fijos
+      </button>
+    </div>
+
+    <!-- FORMULARIO DE GASTOS -->
+    <form id="form-gasto" class="seccion">
+      <h2>Registrar gasto</h2>
+
+      <label for="monto">Monto</label>
+      <input type="number" id="monto" required min="0" step="0.01" />
+
+      <label for="categoria">Categoría</label>
+      <select id="categoria" required>
+        <option value="">Selecciona...</option>
+        <option>Diezmo</option>
+        <option>Camiones</option>
+        <option>Despensa</option>
+        <option>Tiempo aire</option>
+        <option>Productos 4Life</option>
+        <option>Celular</option>
+        <option>Otros</option>
+      </select>
+      <div class="nota">
+        Si eliges <b>Diezmo</b>, el monto se llenará solo con el 10% del ingreso de esa quincena.
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="forma">Forma de pago</label>
+          <select id="forma" required>
+            <option value="">Selecciona...</option>
+            <option>Efectivo</option>
+            <option>Tarjeta</option>
+            <option>Transferencia</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" required />
+        </div>
+      </div>
+
+      <label for="descripcion">Descripción (opcional)</label>
+      <textarea id="descripcion" rows="2"></textarea>
+
+      <button type="submit" class="primary">Guardar gasto</button>
+      <button type="button" id="btn-exportar" class="secondary">Descargar CSV</button>
+    </form>
+
+    <div class="totales" id="resumen"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Qna</th>
+          <th>Cat</th>
+          <th>Monto</th>
+          <th>Forma</th>
+          <th>Desc</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-gastos">
+      </tbody>
+    </table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
